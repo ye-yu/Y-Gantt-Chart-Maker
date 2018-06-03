@@ -7,7 +7,8 @@ import subprocess
 print("Importing sys")
 print("Importing PyQt5")
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import QDate, QTime
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtCore import *
 class FileIO():
 	def openfile(filename):
 		try:
@@ -78,23 +79,33 @@ class Tasks:
 	def returnDayDuration(self):
 		return self.dayDuration
 class Applic(QMainWindow):
-	def __init__(self):
+	def __init__(self, main):
 		super().__init__()
 		self.tasksList = []
 		self.eventName = "Untitled"
 		self.taskName = ""
 		self.__initUI__()
-
+		main.exec_()
 	def __initUI__(self):
 		self.setMenuBar()
+		
+		#for task name
 		QLabel("Task Name: ", self).move(25,25)
 		self.taskNameInput = QLineEdit(self)
 		self.taskNameInput.move(90,27)
 		self.taskNameInput.resize(450,25)
 		self.taskNameInput.textChanged.connect(self.varTaskName)
-		self.createTaskButton = self.createButton("Create New Task", 550,28, functools.partial(self.createTaskBtnClk))
+		self.createTaskButton = self.createButton("Create New Task", 550,26, functools.partial(self.createTaskBtnClk))
 		self.statusBar().showMessage('Ready')
 
+		#for date
+		QLabel("Date Begin: ", self).move(25,65)
+		self.dateBeginBox = QLineEdit(self)
+		self.dateBeginBox.move(90,67)
+		self.dateBeginBox.resize(100,25)
+		self.dateBeginBox.setReadOnly(True)
+		self.showCalendarDateBeginButton = self.createButton("...", 195, 66, functools.partial(self.showCalendarDateBegin))
+		
 		#main window configuration
 		self.resize(700,420)
 		qr = self.frameGeometry()
@@ -187,17 +198,51 @@ class Applic(QMainWindow):
 	def createButton(self, text, posx, posy, taskFunction):
 		btn = QPushButton(text, self)
 		btn.setToolTip(text)
-		btn.resize(btn.sizeHint())
+		btn.resize(btn.sizeHint().width(), 27)
 		btn.move(posx, posy)
 		btn.clicked.connect(taskFunction)
 		return btn
 	def empty(self):
 		print('Action triggered.')
+	def showCalendarDateBegin(self):
+		showCal = CalendarSelection(self)
+	def setInt(self, var, val):
+		var = val
+class CalendarSelection(QMainWindow):
+	def __init__(self, parent=None):
+		super(CalendarSelection, self).__init__(parent)
+		#main window configuration
+		self.resize(300,220)
+		qr = self.frameGeometry()
+		cp = QDesktopWidget().availableGeometry().center()
+		qr.moveCenter(cp)
+		self.move(qr.topLeft())
+		self.setWindowTitle("Calendar Selection")
+		self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+		
+		#showLeftButton
+		self.leftArrow = self.createButton("<<", 0,0,functools.partial(self.empty))
+		self.rightArrow = self.createButton(">>", 225,0,functools.partial(self.empty))
+		self.dateBox = QLineEdit(QDate.currentDate().toString(), self)
+		self.dateBox.setAlignment(Qt.AlignCenter)
+		self.dateBox.setReadOnly(True)
+		self.dateBox.move(83, 0)
+		self.dateBox.resize(self.dateBox.sizeHint().width(), 27)
+		self.show()
+	def createButton(self, text, posx, posy, taskFunction):
+		btn = QPushButton(text, self)
+		btn.setToolTip(text)
+		btn.resize(btn.sizeHint().width(), 27)
+		btn.move(posx, posy)
+		btn.clicked.connect(taskFunction)
+		return btn
+	def empty(self):
+		print("Action triggered.")
+
 try:
 	if __name__ == '__main__':
 		app = QApplication([])
-		ex = Applic()
-		app.exec_()
-except:
-	print('Error')
+		ex = Applic(app)
+except Exception as e:
+	print(e)
 #FileIO.openfile("output.xlsm")
